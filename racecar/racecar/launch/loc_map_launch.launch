@@ -5,7 +5,7 @@
   <arg name="algo" default="slam" />
   <arg name="map_name" default="hangar" />
   <arg name="odom_topic" default="state_estimation/odom" />
-  <arg name="racecar_version" default="NUC4" />
+  <arg name="racecar_version" default="NUC2" />
   <arg name="lidar_input_topic" default="/scan" />
   <arg name="pf_covariance" />
 
