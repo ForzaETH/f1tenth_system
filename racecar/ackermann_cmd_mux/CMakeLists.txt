@@ -19,7 +19,10 @@ add_definitions(-DHAVE_NEW_YAMLCPP)
 endif()
 
 # Dynamic reconfigure support
-generate_dynamic_reconfigure_options(cfg/reload.cfg)
+generate_dynamic_reconfigure_options(
+        cfg/reload.cfg
+        cfg/dyn_tract_tuner.cfg
+        )
 
 catkin_package(
    INCLUDE_DIRS include

@@ -29,13 +29,13 @@
   <!-- High level MUX -->
   <include file="$(find ackermann_cmd_mux)/launch/standalone.launch" ns="high_level">
     <arg name="nodelet_manager_name" value="ackermann_cmd_mux_nodelet_manager" />
-    <arg name="config_file" value="$(find racecar)/config/$(arg racecar_version)/high_level_mux.yaml" />
+    <arg name="config_file" value="$(find stack_master)/config/$(arg racecar_version)/high_level_mux.yaml" />
   </include>
 
   <!-- Low level MUX -->
   <include file="$(find ackermann_cmd_mux)/launch/standalone.launch" ns="low_level">
     <arg name="nodelet_manager_name" value="ackermann_cmd_mux_nodelet_manager" />
-    <arg name="config_file" value="$(find racecar)/config/$(arg racecar_version)/low_level_mux.yaml" />
+    <arg name="config_file" value="$(find stack_master)/config/$(arg racecar_version)/low_level_mux.yaml" />
   </include>
 
 </launch>

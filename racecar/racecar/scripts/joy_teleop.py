@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import importlib
 
 import rospy
@@ -44,9 +44,6 @@ class JoyTeleop:
         self.offline_actions = []
         self.offline_services = []
 
-        self.joy_data = None
-        self.joy_timeout = rospy.Duration.from_sec(0.5)
-        self.last_received_joy = None
         self.old_buttons = []
 
         teleop_cfg = rospy.get_param("teleop")
@@ -72,27 +69,17 @@ class JoyTeleop:
         # Run a low-freq action updater
         rospy.Timer(rospy.Duration(2.0), self.update_actions)
 
-        # Higher frequency (50 Hz to match MPPI) timer to guarantee safety if the controller disconnects
-        rospy.Timer(rospy.Duration(1/50.), self.check_command)
-
     def joy_callback(self, data):
-        self.joy_data = data
-        self.last_received_joy = rospy.Time.now()
-
-    def check_command(self, evt=None):
-        if self.joy_data and self.last_received_joy and rospy.Time.now() - self.last_received_joy < self.joy_timeout:
-            try:
-                for c in self.command_list:
-                    if self.match_command(c, self.joy_data.buttons):
-                        self.run_command(c, self.joy_data)
-                        # Only run 1 command at a time
-                        break
-            except JoyTeleopException as e:
-                rospy.logerr("error while parsing joystick input: %s", str(e))
-            self.old_buttons = self.joy_data.buttons
-        elif not self.joy_data or rospy.Time.now() - self.last_received_joy > self.joy_timeout:
-            self.run_command('default', self.joy_data)
-            rospy.logerr_throttle(10, "Publishing default because no joystick messages")
+        self.last_timestamp = data.header.stamp
+        try:
+            for c in self.command_list:
+                if self.match_command(c, data.buttons):
+                    self.run_command(c, data)
+                    # Only run 1 command at a time
+                    break
+        except JoyTeleopException as e:
+            rospy.logerr("error while parsing joystick input: %s", str(e))
+        self.old_buttons = data.buttons
 
     def register_topic(self, name, command):
         """Add a topic publisher for a joystick command"""
@@ -170,7 +157,7 @@ class JoyTeleop:
 
         # This might also be a default command.
         # We need to check if ANY commands match this set of pressed buttons.
-        any_commands_matched = np.any([ np.array_equal(command['buttons'], button_indexes) for name, command in self.command_list.iteritems()])
+        any_commands_matched = np.any([ np.array_equal(command['buttons'], button_indexes) for name, command in self.command_list.items()])
 
         # Return the final result.
         return (buttons_match) or (not any_commands_matched and self.command_list[c]['is_default'])
@@ -237,7 +224,10 @@ class JoyTeleop:
                   val = joy_state.axes[mapping['axis']] * mapping.get('scale', 1.0) + mapping.get('offset', 0.0)
 
                 self.set_member(msg, mapping['target'], val)
-                
+        try: 
+            msg.header.stamp = self.last_timestamp
+        except:
+            pass
         self.publishers[cmd['topic_name']].publish(msg)
 
     def run_action(self, c, joy_state):
@@ -293,7 +283,7 @@ class JoyTeleop:
         return self.service_types[service_name]
 
     def update_actions(self, evt=None):
-        for name, cmd in self.command_list.iteritems():
+        for name, cmd in self.command_list.items():
             if cmd['type'] != 'action':
                 continue
             if cmd['action_name'] in self.offline_actions:
