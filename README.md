@@ -1,5 +1,7 @@
 # Overall System Architecture
 
+## This builds on top of the original [F1TENTH System](https://github.com/f1tenth/f1tenth_system)
+
 ![image](./misc/ros_architecture.png)
 **Base System:** Either the [Simulator](../f110-simulator/README.md) or the [physical system](./README.md). They are both made to work interchangeably with each other i.e. offer the same outputs/inputs to the outside, as well as the same functionality. The base system launches many different nodes that originate inside the utils repo as well.
 - [State Estimation](../../state_estimation/README.md)
