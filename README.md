@@ -1,6 +1,6 @@
 # Overall System Architecture
 
-## This builds on top of the original [F1TENTH System](https://github.com/f1tenth/f1tenth_system)
+### This is meant to be run in combination with the ForzaETH [race_stack](https://github.com/ForzaETH/race_stack)
 
 ![image](./misc/ros_architecture.png)
 **Base System:** Either the [Simulator](../f110-simulator/README.md) or the [physical system](./README.md). They are both made to work interchangeably with each other i.e. offer the same outputs/inputs to the outside, as well as the same functionality. The base system launches many different nodes that originate inside the utils repo as well.
@@ -98,4 +98,5 @@ To test head-to-head in sim, run the following to publish a dummy opponent:
 roslaunch obstacle_publisher obstacle_publisher.launch speed:=1
 ```
 
+## This builds on top of the original [F1TENTH System](https://github.com/f1tenth/f1tenth_system)
 
