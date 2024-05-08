@@ -120,11 +120,23 @@ def generate_launch_description():
         parameters=[LaunchConfiguration('mux_config')],
         remappings=[('ackermann_cmd_out', 'ackermann_drive')]
     )
-    static_tf_node = Node(
+    static_tf_node_bl = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_baselink_to_laser',
         arguments=['0.27', '0.0', '0.11', '0.0', '0.0', '0.0', 'base_link', 'laser']
+    )
+    static_tf_node_mo = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_map_to_odom',
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom']
+    )
+    static_tf_node_bi = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_baselink_to_imu',
+        arguments=['0.07', '0.0', '0.05', '0.0', '0.0', '0.7071068', '0.7071068', 'base_link', 'imu']
     )
 
     # finalize
@@ -136,6 +148,8 @@ def generate_launch_description():
     # ld.add_action(throttle_interpolator_node)
     ld.add_action(urg_node)
     ld.add_action(ackermann_mux_node)
-    ld.add_action(static_tf_node)
+    ld.add_action(static_tf_node_bl)
+    ld.add_action(static_tf_node_mo)
+    ld.add_action(static_tf_node_bi)
 
     return ld
