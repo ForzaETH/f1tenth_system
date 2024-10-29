@@ -23,6 +23,10 @@ class CarStateNode():
         self.ekf_odom = None
         self.prop_state = prop_state
         self.acc = np.zeros(5)
+        # moving average buffer
+        self.vx_buffer = np.zeros(10)
+        self.vy_buffer = np.zeros(10)
+
 
         # Wait until the requried tf transforms exist
         self.tf_buffer = tf2_ros.Buffer()
@@ -45,15 +49,19 @@ class CarStateNode():
         self.pub_acc = rospy.Publisher('acc_estimate', Float64, queue_size=1, tcp_nodelay=True)
         self.pub_state_pose = rospy.Publisher('/car_state/pose', PoseStamped, queue_size=1, tcp_nodelay=True)
         self.pub_state_odom = rospy.Publisher('/car_state/odom', Odometry, queue_size=1, tcp_nodelay=True)
+        self.pub_state_diffodom = rospy.Publisher('/car_state/odom_diff', Odometry, queue_size=1, tcp_nodelay=True)
         self.pub_state_path = rospy.Publisher('/car_state/path', Path, queue_size=1, tcp_nodelay=True)
         self.pub_state_pitch = rospy.Publisher('/car_state/pitch', Float32, queue_size=1, tcp_nodelay=True)
 
         self.ekf_odom = None
         self.imu_data = None
+        self.last_pose = None
+
         self.path_msg = Path()
         self.MAX_PATH_LEN = 500
         self.prop_state = prop_state
         self.path_counter = 0
+        self.rate = 100  # 100 Hz
 
         self.state_loop()
 
@@ -103,7 +111,7 @@ class CarStateNode():
         return r, p, y
 
     def state_loop(self):
-        rate = rospy.Rate(80)  # rate in hertz
+        rate = rospy.Rate(self.rate)  # rate in hertz
         print('Carstate Node waiting for Odometry and IMU messages...')
         rospy.wait_for_message(self.ODOM_TOPIC, Odometry)
         rospy.wait_for_message(self.IMU_TOPIC, Imu)
@@ -115,6 +123,7 @@ class CarStateNode():
         while not rospy.is_shutdown():
             carstate_pose_msg = PoseStamped()
             carstate_odom_msg = Odometry()
+            carstate_odom_diff_msg = Odometry()
 
             trans_mb = self.get_slam_messages()
 
@@ -138,12 +147,47 @@ class CarStateNode():
             _, p, _ = self.imu_to_rpy(imu=self.imu_data)
             pitch_msg = Float32()
             pitch_msg.data = p
+            
+            # Get Odom from differentiating with last pose
+            if self.last_pose is not None and carstate_pose_msg.header.stamp.to_sec() - self.last_pose.header.stamp.to_sec() > 0.0:
+                carstate_odom_diff_msg.header = carstate_pose_msg.header
+                carstate_odom_diff_msg.pose.pose = carstate_pose_msg.pose
+
+                # Calculate velocity
+                t_diff = 1/self.rate  # 100 Hz
+                vx_map = (carstate_odom_diff_msg.pose.pose.position.x - self.last_pose.pose.position.x) / t_diff
+                vy_map = (carstate_odom_diff_msg.pose.pose.position.y - self.last_pose.pose.position.y) / t_diff
+
+                # transform to baselink using trans_mb
+                rot_q = quaternion_to_list(trans_mb.transform.rotation)
+                rot_mat = tft.quaternion_matrix(rot_q)
+                velocity_map = np.array([vx_map, vy_map, 0, 1])  # make it homogeneous
+                velocity_baselink = np.dot(rot_mat.T, velocity_map)
+
+                self.vx_buffer[1:] = self.vx_buffer[:-1]
+                self.vx_buffer[0] = velocity_baselink[0]
+                self.vy_buffer[1:] = self.vy_buffer[:-1]
+                self.vy_buffer[0] = velocity_baselink[1]
+
+                carstate_odom_diff_msg.twist.twist.linear.x = np.mean(self.vx_buffer)
+                carstate_odom_diff_msg.twist.twist.linear.y = np.mean(self.vy_buffer)
+
+            else:
+                pass
+                # rospy.logwarn("[Car State] No last pose to differentiate with")
+            
+            # Get vy from odom_diff
+            carstate_odom_msg.twist.twist.linear.y = carstate_odom_diff_msg.twist.twist.linear.y
 
             #Publish everything
             self.pub_state_pose.publish(carstate_pose_msg)
             self.pub_state_odom.publish(carstate_odom_msg)
-
+            self.pub_state_diffodom.publish(carstate_odom_diff_msg)
             self.pub_state_pitch.publish(pitch_msg)
+            
+            # Update last pose
+            self.last_pose = carstate_pose_msg
+
             # DEBUG ROS param to activate path
             if self.DEBUG:
                 pose = self.slam_pose if self.LOCALIZATION == "slam" else self.pf_pose
