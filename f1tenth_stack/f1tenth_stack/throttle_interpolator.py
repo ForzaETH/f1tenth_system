@@ -19,11 +19,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+import time
 import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import Float64
+from sensor_msgs.msg import Joy
 
 class ThrottleInterpolator(Node):
     def __init__(self):
@@ -84,12 +85,28 @@ class ThrottleInterpolator(Node):
 
         self.max_delta_rpm = abs(self.speed_to_erpm_gain * self.max_acceleration / self.throttle_smoother_rate)
         self.rmp_timer = self.create_timer(1.0/self.throttle_smoother_rate, self._publish_throttle_command)
+        
+        self.joy_sub = self.create_subscription(
+            Joy,
+            '/joy',
+            self._process_joy_command,
+            1)
+        self.joy_watchdog = 0
+        self.have_joystick = False
+        self.safety_timer = self.create_timer(0.01, self._safety_timer_callback)
+        while self.joy_watchdog == 0:
+            self.get_logger().info('[throtle interpolator] Waiting for joystick command')
+            rclpy.spin_once(self)
+            time.sleep(0.25)
 
     def _publish_throttle_command(self):
-        desired_delta = self.desired_rpm-self.last_rpm
-        clipped_delta = max(min(desired_delta, self.max_delta_rpm), -self.max_delta_rpm)
-        smoothed_rpm = self.last_rpm + clipped_delta
-        self.last_rpm = smoothed_rpm
+        if self.have_joystick:
+            desired_delta = self.desired_rpm-self.last_rpm
+            clipped_delta = max(min(desired_delta, self.max_delta_rpm), -self.max_delta_rpm)
+            smoothed_rpm = self.last_rpm + clipped_delta
+            self.last_rpm = smoothed_rpm
+        else:
+            smoothed_rpm = 0.0
         rpm_msg = Float64()
         rpm_msg.data = float(smoothed_rpm)
         self.rpm_output.publish(rpm_msg)
@@ -101,10 +118,16 @@ class ThrottleInterpolator(Node):
         self.desired_rpm = input_rpm
 
     def _publish_servo_command(self):
-        desired_delta = self.desired_servo_position-self.last_servo
-        clipped_delta = max(min(desired_delta, self.max_delta_servo), -self.max_delta_servo)
-        smoothed_servo = self.last_servo + clipped_delta
-        self.last_servo = smoothed_servo
+        if self.have_joystick:
+            desired_delta = self.desired_servo_position-self.last_servo
+            clipped_delta = max(min(desired_delta, self.max_delta_servo), -self.max_delta_servo)
+            smoothed_servo = self.last_servo + clipped_delta
+            self.last_servo = smoothed_servo
+        else:
+            desired_delta = 0-self.last_servo
+            clipped_delta = max(min(desired_delta, self.max_delta_servo), -self.max_delta_servo)
+            smoothed_servo = self.last_servo + clipped_delta
+            self.last_servo = smoothed_servo
         servo_msg = Float64()
         servo_msg.data = float(smoothed_servo)
         self.servo_output.publish(servo_msg)
@@ -115,6 +138,16 @@ class ThrottleInterpolator(Node):
         input_servo = min(max(input_servo, self.min_servo), self.max_servo)
         # set the target servo position
         self.desired_servo_position = input_servo
+        
+    def _process_joy_command(self,msg):
+        self.joy_watchdog = 10
+        if msg.buttons[5] or msg.buttons[4]:
+            self.have_joystick = True
+
+    def _safety_timer_callback(self):
+        self.joy_watchdog -= 1
+        if self.joy_watchdog < 0:
+            self.have_joystick = False
 
 def main(args=None):
     rclpy.init(args=args)

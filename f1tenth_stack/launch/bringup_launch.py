@@ -126,6 +126,18 @@ def generate_launch_description():
         name='static_baselink_to_laser',
         arguments=['0.27', '0.0', '0.11', '0.0', '0.0', '0.0', 'base_link', 'laser']
     )
+    static_tf_node_cbb = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_baselink_to_cbb',
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'car_state/base_link']
+    )
+    static_tf_node_cll = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_baselink_to_cll',
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'laser', 'car_state/laser']
+    )
     static_tf_node_mo = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -145,11 +157,13 @@ def generate_launch_description():
     ld.add_action(ackermann_to_vesc_node)
     ld.add_action(vesc_to_odom_node)
     ld.add_action(vesc_driver_node)
-    # ld.add_action(throttle_interpolator_node)
+    ld.add_action(throttle_interpolator_node)
     ld.add_action(urg_node)
     ld.add_action(ackermann_mux_node)
     ld.add_action(static_tf_node_bl)
     ld.add_action(static_tf_node_mo)
     ld.add_action(static_tf_node_bi)
+    ld.add_action(static_tf_node_cbb)
+    ld.add_action(static_tf_node_cll)
 
     return ld
