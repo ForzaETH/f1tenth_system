@@ -15,7 +15,6 @@
   <depend>joy_teleop</depend>
   <depend>rosbridge_server</depend>
   <depend>vesc</depend>
-  <depend>ackermann_mux</depend>
   <depend>std_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>

@@ -4,9 +4,9 @@ import math
 
 import pytest
 
-from f1tenth_stack.actuation_limiter import actuation_is_enabled
 from f1tenth_stack.actuation_limiter import ActuationLimiter
 from f1tenth_stack.actuation_limiter import ActuationLimits
+from f1tenth_stack.actuation_limiter import select_command_source
 
 
 @pytest.fixture
@@ -78,21 +78,37 @@ def test_invalid_limits_are_rejected():
         )
 
 
-def test_fresh_command_joystick_and_deadman_enable_actuation():
-    assert actuation_is_enabled(10.0, 9.9, 9.85, True, 0.2, 0.2)
+def select_source(human=False, autonomous=False, teleop=9.9,
+                  navigation=9.9, joy=9.9):
+    return select_command_source(
+        10.0, joy, human, autonomous, teleop, navigation, 0.2, 0.2)
+
+
+def test_human_deadman_selects_only_teleop():
+    assert select_source(human=True) == 'teleop'
+    assert select_source(human=True, teleop=None) is None
+
+
+def test_autonomous_deadman_selects_only_navigation():
+    assert select_source(autonomous=True) == 'navigation'
+    assert select_source(autonomous=True, navigation=None) is None
+
+
+def test_human_has_priority_when_both_deadmen_are_held():
+    assert select_source(human=True, autonomous=True) == 'teleop'
+    assert select_source(
+        human=True, autonomous=True, teleop=None) is None
 
 
 @pytest.mark.parametrize(
-    'last_command,last_joy,deadman',
+    'kwargs',
     [
-        (None, 9.9, True),
-        (9.9, None, True),
-        (9.9, 9.9, False),
-        (9.7, 9.9, True),
-        (9.9, 9.7, True),
+        {},
+        {'human': True, 'joy': None},
+        {'human': True, 'joy': 9.7},
+        {'human': True, 'teleop': 9.7},
+        {'autonomous': True, 'navigation': 9.7},
     ],
 )
-def test_missing_stale_or_released_inputs_disable_actuation(
-        last_command, last_joy, deadman):
-    assert not actuation_is_enabled(
-        10.0, last_command, last_joy, deadman, 0.2, 0.2)
+def test_missing_stale_or_released_inputs_disable_actuation(kwargs):
+    assert select_source(**kwargs) is None

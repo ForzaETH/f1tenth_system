@@ -46,14 +46,9 @@ def generate_launch_description():
         'config',
         'sensors.yaml'
     )
-    mux_config = os.path.join(
-        get_package_share_directory('f1tenth_stack'),
-        'config',
-        'mux.yaml'
-    )
 
     joy_la = DeclareLaunchArgument(
-        'joy_config',
+        'joy_teleop_config',
         default_value=joy_teleop_config,
         description='Descriptions for joy and joy_teleop configs')
     vesc_la = DeclareLaunchArgument(
@@ -64,24 +59,19 @@ def generate_launch_description():
         'sensors_config',
         default_value=sensors_config,
         description='Descriptions for sensor configs')
-    mux_la = DeclareLaunchArgument(
-        'mux_config',
-        default_value=mux_config,
-        description='Descriptions for ackermann mux configs')
-
-    ld = LaunchDescription([joy_la, vesc_la, sensors_la, mux_la])
+    ld = LaunchDescription([joy_la, vesc_la, sensors_la])
 
     joy_node = Node(
         package='joy',
         executable='joy_node',
         name='joy',
-        parameters=[LaunchConfiguration('joy_config')]
+        parameters=[LaunchConfiguration('joy_teleop_config')]
     )
     joy_teleop_node = Node(
         package='joy_teleop',
         executable='joy_teleop',
         name='joy_teleop',
-        parameters=[LaunchConfiguration('joy_config')]
+        parameters=[LaunchConfiguration('joy_teleop_config')]
     )
     ackermann_to_vesc_node = Node(
         package='vesc_ackermann',
@@ -101,10 +91,10 @@ def generate_launch_description():
         name='vesc_driver_node',
         parameters=[LaunchConfiguration('vesc_config')]
     )
-    throttle_interpolator_node = Node(
+    actuation_manager_node = Node(
         package='f1tenth_stack',
-        executable='throttle_interpolator',
-        name='throttle_interpolator',
+        executable='actuation_manager',
+        name='actuation_manager',
         parameters=[LaunchConfiguration('vesc_config')]
     )
     urg_node = Node(
@@ -112,13 +102,6 @@ def generate_launch_description():
         executable='urg_node_driver',
         name='urg_node',
         parameters=[LaunchConfiguration('sensors_config')]
-    )
-    ackermann_mux_node = Node(
-        package='ackermann_mux',
-        executable='ackermann_mux',
-        name='ackermann_mux',
-        parameters=[LaunchConfiguration('mux_config')],
-        remappings=[('ackermann_cmd_out', 'ackermann_drive')]
     )
     static_tf_node_bl = Node(
         package='tf2_ros',
@@ -157,9 +140,8 @@ def generate_launch_description():
     ld.add_action(ackermann_to_vesc_node)
     ld.add_action(vesc_to_odom_node)
     ld.add_action(vesc_driver_node)
-    ld.add_action(throttle_interpolator_node)
+    ld.add_action(actuation_manager_node)
     ld.add_action(urg_node)
-    ld.add_action(ackermann_mux_node)
     ld.add_action(static_tf_node_bl)
     ld.add_action(static_tf_node_mo)
     ld.add_action(static_tf_node_bi)

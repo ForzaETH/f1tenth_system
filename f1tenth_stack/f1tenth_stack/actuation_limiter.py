@@ -99,14 +99,24 @@ class ActuationLimiter:
         return self.state
 
 
-def actuation_is_enabled(now, last_command, last_joy, deadman_held,
-                         command_timeout, joy_timeout):
-    """Return whether command, joystick and deadman inputs are all valid."""
-    if last_command is None or last_joy is None or not deadman_held:
-        return False
-    command_age = now - last_command
-    joy_age = now - last_joy
-    return (
-        0.0 <= command_age <= command_timeout
-        and 0.0 <= joy_age <= joy_timeout
-    )
+def select_command_source(now, last_joy, human_deadman,
+                          autonomous_deadman, last_teleop,
+                          last_navigation, command_timeout, joy_timeout):
+    """Select the fresh command explicitly authorized by the deadman.
+
+    Human control has priority when both deadman buttons are held. It does not
+    fall back to navigation when its command is stale, because that would let
+    the human deadman authorize an autonomous command.
+    """
+    if last_joy is None or not 0.0 <= now - last_joy <= joy_timeout:
+        return None
+    if human_deadman:
+        if (last_teleop is not None
+                and 0.0 <= now - last_teleop <= command_timeout):
+            return 'teleop'
+        return None
+    if autonomous_deadman:
+        if (last_navigation is not None
+                and 0.0 <= now - last_navigation <= command_timeout):
+            return 'navigation'
+    return None
