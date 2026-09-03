@@ -24,6 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'actuation_manager = f1tenth_stack.actuation_manager:main',
             'throttle_interpolator = f1tenth_stack.throttle_interpolator:main',
             'tf_publisher = f1tenth_stack.tf_publisher:main'
         ],
