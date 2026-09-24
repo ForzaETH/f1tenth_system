@@ -64,9 +64,9 @@ class ActuationLimiter:
         """Advance the applied command by ``dt`` seconds.
 
         Acceleration is the positive speed-reference slew rate and
-        deceleration is the negative slew rate. The current stack does not
-        command reverse motion. A disabled command stops the motor immediately
-        and returns steering toward zero at the configured steering rate.
+        deceleration is the negative slew rate. A disabled command stops the
+        motor immediately and returns steering toward zero at the configured
+        steering rate.
         """
         if not all(math.isfinite(value) for value in
                    (requested_speed, requested_steering, dt)):
