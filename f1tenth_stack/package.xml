@@ -11,11 +11,12 @@
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>urg_node</depend>
-  <depend>joy</depend>
+  <depend>joy_linux</depend>
   <depend>joy_teleop</depend>
   <depend>rosbridge_server</depend>
   <depend>vesc</depend>
   <depend>std_msgs</depend>
+  
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
