@@ -23,7 +23,6 @@ On Logitech F-710 joysticks, the LB button is the deadman's switch for teleop, a
 3. joy [https://index.ros.org/p/joy/#foxy](https://index.ros.org/p/joy/#foxy). This is the driver for joysticks in ROS 2.
 4. teleop_tools  [https://index.ros.org/p/teleop_tools/#foxy](https://index.ros.org/p/teleop_tools/#foxy). This is the package for teleop with joysticks in ROS 2.
 5. vesc [GitHub - f1tenth/vesc at ros2](https://github.com/f1tenth/vesc/tree/ros2). This is the driver for VESCs in ROS 2.
-6. ackermann_mux [GitHub - f1tenth/ackermann_mux: Twist multiplexer](https://github.com/f1tenth/ackermann_mux). This is a package for multiplexing ackermann messages in ROS 2.
 <!-- 7. rosbridge_suite [https://index.ros.org/p/rosbridge_suite/#foxy-overview](https://index.ros.org/p/rosbridge_suite/#foxy-overview) This is a package that allows for websocket connection in ROS 2. -->
 
 ## Package in this repo
@@ -38,7 +37,6 @@ On Logitech F-710 joysticks, the LB button is the deadman's switch for teleop, a
 4. vesc_to_odom_node
 5. vesc_driver_node
 6. urg_node
-7. ackermann_mux
 
 ## Parameters and topics for dependencies
 

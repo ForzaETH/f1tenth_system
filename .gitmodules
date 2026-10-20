@@ -1,7 +1,3 @@
-[submodule "ackermann_mux"]
-	path = ackermann_mux
-	url = https://github.com/ForzaETH/ackermann_mux
-	branch = foxy-devel
 [submodule "teleop_tools"]
 	path = teleop_tools
 	url = https://github.com/ForzaETH/teleop_tools.git
