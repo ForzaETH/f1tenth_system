@@ -124,19 +124,28 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_baselink_to_laser',
-        arguments=['0.27', '0.0', '0.11', '0.0', '0.0', '0.0', 'base_link', 'laser']
+        arguments=['--x', '0.27', '--y', '0.0', '--z', '0.11',
+                   '--roll', '0.0', '--pitch', '0.0', '--yaw', '0.0',
+                   '--frame-id', 'base_link', '--child-frame-id', 'laser',
+                   '--ros-args', '--log-level', 'warn']
     )
     static_tf_node_mo = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_map_to_odom',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom']
+        arguments=['--x', '0.0', '--y', '0.0', '--z', '0.0',
+                   '--roll', '0.0', '--pitch', '0.0', '--yaw', '0.0',
+                   '--frame-id', 'map', '--child-frame-id', 'odom',
+                   '--ros-args', '--log-level', 'warn']
     )
     static_tf_node_bi = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_baselink_to_imu',
-        arguments=['0.07', '0.0', '0.05', '0.0', '0.0', '0.7071068', '0.7071068', 'base_link', 'imu']
+        arguments=['--x', '0.07', '--y', '0.0', '--z', '0.05',
+                   '--qx', '0.0', '--qy', '0.0', '--qz', '0.7071068', '--qw', '0.7071068',
+                   '--frame-id', 'base_link', '--child-frame-id', 'imu',
+                   '--ros-args', '--log-level', 'warn']
     )
 
     # finalize
