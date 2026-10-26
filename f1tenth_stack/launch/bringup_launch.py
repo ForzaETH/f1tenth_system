@@ -103,36 +103,6 @@ def generate_launch_description():
         name='urg_node',
         parameters=[LaunchConfiguration('sensors_config')]
     )
-    static_tf_node_bl = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_baselink_to_laser',
-        arguments=['0.27', '0.0', '0.11', '0.0', '0.0', '0.0', 'base_link', 'laser']
-    )
-    static_tf_node_cbb = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_baselink_to_cbb',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'car_state/base_link']
-    )
-    static_tf_node_cll = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_baselink_to_cll',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'laser', 'car_state/laser']
-    )
-    static_tf_node_mo = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_map_to_odom',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom']
-    )
-    static_tf_node_bi = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_baselink_to_imu',
-        arguments=['0.07', '0.0', '0.05', '0.0', '0.0', '0.7071068', '0.7071068', 'base_link', 'imu']
-    )
 
     # finalize
     ld.add_action(joy_node)
@@ -142,10 +112,5 @@ def generate_launch_description():
     ld.add_action(vesc_driver_node)
     ld.add_action(actuation_manager_node)
     ld.add_action(urg_node)
-    ld.add_action(static_tf_node_bl)
-    # ld.add_action(static_tf_node_mo)
-    ld.add_action(static_tf_node_bi)
-    ld.add_action(static_tf_node_cbb)
-    ld.add_action(static_tf_node_cll)
 
     return ld
