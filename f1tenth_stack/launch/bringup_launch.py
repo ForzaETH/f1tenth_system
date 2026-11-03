@@ -139,14 +139,6 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('use_vio'))
     )
 
-    imu_transformer_node = Node(
-        package='imu_transformer',
-        executable='imu_transformer_node',
-        name='imu_transformer_node',
-        parameters=[{'target_frame': 'base_link'}],
-        remappings=[('imu_in', '/sensors/imu/raw'), ('imu_out', '/imu')]
-    )
-
     # Finalize LaunchDescription
     ld.add_action(joy_node)
     ld.add_action(joy_teleop_node)
@@ -156,6 +148,5 @@ def generate_launch_description():
     ld.add_action(actuation_manager_node)
     ld.add_action(urg_node)
     ld.add_action(camera_node)
-    ld.add_action(imu_transformer_node)
 
     return ld
