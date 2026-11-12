@@ -1,4 +1,0 @@
-[submodule "teleop_tools"]
-	path = teleop_tools
-	url = https://github.com/ForzaETH/teleop_tools.git
-	branch = foxy-devel

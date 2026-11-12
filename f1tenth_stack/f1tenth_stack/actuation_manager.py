@@ -119,6 +119,14 @@ class ActuationManager(Node):
         self.autonomous_deadman = self._button_is_held(
             message, self.autonomous_deadman_button)
 
+        # Required when rapidly releasing the deadman
+        if not self.human_deadman:
+            self.teleop_command = (0.0, 0.0)
+            self.last_teleop_time = None
+        if not self.autonomous_deadman:
+            self.navigation_command = (0.0, 0.0)
+            self.last_navigation_time = None
+
     @staticmethod
     def _button_is_held(message, button):
         return button < len(message.buttons) and message.buttons[button] == 1
