@@ -73,6 +73,12 @@ def generate_launch_description():
         default_value=sensors_config,
         description='Descriptions for sensor configs'
     )
+    extra_vesc_la = DeclareLaunchArgument(
+        'extra_vesc_config',
+        default_value='',
+        description='Optional param file loaded after vesc_config by the VESC driver and '
+                    'ackermann_to_vesc, to override some of its values'
+    )
     camera_la = DeclareLaunchArgument(
         'camera_config',
         default_value=camera_config,
@@ -85,6 +91,7 @@ def generate_launch_description():
         joy_la,
         vesc_la,
         sensors_la,
+        extra_vesc_la,
         camera_la
     ])
 
@@ -100,12 +107,26 @@ def generate_launch_description():
         name='joy_teleop',
         parameters=[LaunchConfiguration('joy_teleop_config')]
     )
-    ackermann_to_vesc_node = Node(
-        package='vesc_ackermann',
-        executable='ackermann_to_vesc_node',
-        name='ackermann_to_vesc_node',
-        parameters=[LaunchConfiguration('vesc_config')]
-    )
+    def vesc_nodes(context):
+        params = [LaunchConfiguration('vesc_config').perform(context)]
+        extra = LaunchConfiguration('extra_vesc_config').perform(context)
+        if extra:
+            params.append(extra)
+        return [
+            Node(
+                package='vesc_ackermann',
+                executable='ackermann_to_vesc_node',
+                name='ackermann_to_vesc_node',
+                parameters=params
+            ),
+            Node(
+                package='vesc_driver',
+                executable='vesc_driver_node',
+                name='vesc_driver_node',
+                parameters=params
+            ),
+        ]
+    vesc_nodes_action = OpaqueFunction(function=vesc_nodes)
     def vesc_to_odom(context):
         vesc_config = LaunchConfiguration('vesc_config').perform(context)
         params = [vesc_config]
@@ -122,12 +143,6 @@ def generate_launch_description():
             parameters=params
         )]
     vesc_to_odom_node = OpaqueFunction(function=vesc_to_odom)
-    vesc_driver_node = Node(
-        package='vesc_driver',
-        executable='vesc_driver_node',
-        name='vesc_driver_node',
-        parameters=[LaunchConfiguration('vesc_config')]
-    )
     actuation_manager_node = Node(
         package='f1tenth_stack',
         executable='actuation_manager',
@@ -153,9 +168,8 @@ def generate_launch_description():
     # Finalize LaunchDescription
     ld.add_action(joy_node)
     ld.add_action(joy_teleop_node)
-    ld.add_action(ackermann_to_vesc_node)
+    ld.add_action(vesc_nodes_action)
     ld.add_action(vesc_to_odom_node)
-    ld.add_action(vesc_driver_node)
     ld.add_action(actuation_manager_node)
     ld.add_action(urg_node)
     ld.add_action(camera_node)
